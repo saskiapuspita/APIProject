@@ -6,7 +6,11 @@ const express = require('express');
 
 const usersRoutes = require('./routes/users.js');
 
+const articlesRoutes = require('./routes/articles.js');
+
 const middlewareLogRequest = require('./middleware/logs.js');
+
+const upload = require('./middleware/multer.js');
 
 const app = express();
 
@@ -15,29 +19,28 @@ const app = express();
 app.use(middlewareLogRequest);
 
 app.use(express.json());
+
+app.use('/assets', express.static('public/images'));
+
+app.post('/upload', upload.single('photo'), (req, res) => {
+    res.json({
+        message: 'Upload berhasil',
+    })
+});
+
+app.use((err, req, res, next) => {
+    res.json({
+        message: err.message
+    })
+});
+
 //express routing 
 //app.method(path, handler);
 //method use is a midleware to handle http method
 
 app.use('/users', usersRoutes);
 
-// For pool initialization, see above
-app.use('/', (req, res) => {
-    dbPool.execute("SELECT * FROM users", function(err, rows) {
-        // Connection is automatically released when query resolves
-        if (err) {
-            res.json({
-                message: 'connection failed',
-            })
-        }
-    
-        res.json({
-            message: 'connection success',
-            data: rows,
-        })
-      });
-})
-
+app.use('/articles', articlesRoutes);
 
 app.get("/", (req, res) => {
     res.json({
